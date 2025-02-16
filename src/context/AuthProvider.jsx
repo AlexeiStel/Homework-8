@@ -1,32 +1,33 @@
-import { createContext, useState, useContext } from "react"
+import React, { createContext, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
-export function useAuth( ) {
-    return useContext(AuthContext)
-}
-export function AuthProvider({children}) {
-    const [user, setUser] = useState(() => localStorage.getItem("user") || null);
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
 
-    const signin = (newUser, callback) => {
-        setUser(newUser);
-        localStorage.setItem("user", newUser)
-        callback();
-    }
-    const signout = (callback) => {
-        setUser(null);
-        localStorage.removeItem("user");
-        callback();
-    }
-    const value =  {
-        user,
-        signin,
-        signout,
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+  const [user, setUser] = useState(() => localStorage.getItem("user") || null);
 
-    }
-    return (
-        <AuthContext.Provider value={value}>
-           {children}
-        </AuthContext.Provider>
-    )
-}
+  const login = (newUser) => {
+    setUser(newUser);
+    setIsAuthenticated(true);
+    localStorage.setItem("user", newUser)
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+    setIsAuthenticated(false);
+    navigate("/login"); 
+  };
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

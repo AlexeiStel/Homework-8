@@ -1,42 +1,45 @@
-import {NavLink, Outlet} from 'react-router-dom';
-import { AuthStatus } from '../component/AuthStatus';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthProvider';  
+import './MainLayout.css';  
 
-export function MainLayout() {
-    return (
-        <>
-        <AuthStatus />
-        <ul>
-			<li>
-				<NavLink 
-					style={ ({ isActive }) => isActive ? {color: "red"} : {}} 
-					to="/" 
-					>
-					Home
-				</NavLink>
-			</li>
-			<li>
-				<NavLink 
-					style={ ({ isActive }) => isActive ? {color: "red"} : {}} 
-					to="/heroes">Heroes
-				</NavLink>
-			</li>
-			<li>
-				<NavLink 
-				style={ ({ isActive }) => isActive ? {color: "red"} : {}} 
-				to="/locations">
-					Locations
-				</NavLink>
-			</li>
-			<li>
-				<NavLink 
-				style={ ({ isActive }) => isActive ? {color: "red"} : {}} 
-				to="/episodes">
-					Episodes
-				</NavLink>
-			</li>
-		</ul>
 
-        <Outlet />
-        </>
-    )
-}
+const MainLayout = () => {
+	const { isAuthenticated, user, logout } = useAuth();  
+	const location = useLocation();
+	const isLoginPage = location.pathname !== '/login';
+
+	return (
+	<>
+		<nav className="main-container">
+		<NavLink to="/">Home</NavLink>
+		<NavLink 
+			style={ ({ isActive }) => isActive ? {color: "red"} : {}}  
+			to="/category/character">Герои</NavLink>
+		<NavLink 
+			style={ ({ isActive }) => isActive ? {color: "red"} : {}}  
+			to="/category/location">Локации</NavLink>
+		<NavLink 
+			style={ ({ isActive }) => isActive ? {color: "red"} : {}} 
+			to="/category/episode">Эпизоды</NavLink>
+		</nav>
+		{isAuthenticated ? (
+			<div className="greeting"> 
+			<p>Добро пожаловать, {user}</p> 
+			<button onClick={logout}>Выйти</button> 
+			</div>
+		) :  (
+			isLoginPage ?  <div className="greeting">
+			<p>Пожалуйста, войдите</p> 
+			<Link to="/login">
+				<button>Войти</button>  
+			</Link>
+			</div> : null
+			
+		)}
+	  </>
+  );
+};
+
+export default MainLayout;

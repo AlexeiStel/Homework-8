@@ -1,32 +1,83 @@
-import React from 'react';
-import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../context/AuthProvider";
+import './CategoryPage.css';
 
-const CategoryPage = ({ category }) => {
+const CategoryPage = () => {
+  const { type } = useParams();
   const [items, setItems] = useState([]);
-  const filePath = {
-   "Heroes": "/data/characters.json",
-    "Locations": "/data/location.json",
-    "Episodes": "/data/episode.json"
-  };
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [maxPages, setMaxPages] = useState(null);
+  const observer = useRef(null);
+  const navigate = useNavigate();
+
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    fetch(filePath[category])
-      .then(response => response.json())
-      .then(data => setItems(data))
-      .catch(error => console.error("Ошибка загрузки:", error));
-  }, [category]);
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    setItems([]);  
+    setMaxPages(null);
+    setPage(1);    
+  }, [type]);
+
+  useEffect(() => {
+    if (loading || (maxPages && page > maxPages)) return;
+    setLoading(true);
+    axios
+      .get(`https://rickandmortyapi.com/api/${type}?page=${page}`)
+      .then((response) => {
+        setItems((prevItems) => [...prevItems, ...response.data.results]); 
+        setMaxPages(response.data.info.pages)
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [type, page]);
+
+  useEffect(() => {
+    observer.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading && (!maxPages || page < maxPages)) {
+          setPage((prev) => prev + 1); 
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const loadMoreElement = document.getElementById("load-more");
+    if (loadMoreElement) {
+      observer.current.observe(loadMoreElement);
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect(); 
+      }
+    };
+  }, [loading]);
+
+  if (!isAuthenticated) {
+    return <div>Пожалуйста, войдите в систему для доступа к категориям.</div>;
+  }
 
   return (
-    <div>
-      <h2>{category}</h2>
+    <div className="category-container">
+      <h2>{type.charAt(0).toUpperCase() + type.slice(1)}</h2>
       <ul>
-        {items.map(item => (
-          <li key={item.id}>
-            <NavLink to={`/${category.toLowerCase()}/${item.id}`}>{item.name}</NavLink>
+        {items.map((item, index) => (
+          <li key={item.id+'-'+page+'-'+index}>
+            <Link to={`/category/${type}/${item.id}`}>{item.name}</Link>
           </li>
         ))}
       </ul>
+      {loading && <p>Загрузка...</p>}
+      <div id="load-more" style={{ height: "20px" }}></div>
     </div>
   );
 };
