@@ -10,6 +10,7 @@ const CategoryPage = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [maxPages, setMaxPages] = useState(null);
+  const [error, setError] = useState(null);
   const observer = useRef(null);
   const navigate = useNavigate();
 
@@ -25,11 +26,13 @@ const CategoryPage = () => {
     setItems([]);  
     setMaxPages(null);
     setPage(1);    
+    setError(null);
   }, [type]);
 
   useEffect(() => {
     if (loading || (maxPages && page > maxPages)) return;
     setLoading(true);
+    setError(null);
     axios
       .get(`https://rickandmortyapi.com/api/${type}?page=${page}`)
       .then((response) => {
@@ -37,13 +40,22 @@ const CategoryPage = () => {
         setMaxPages(response.data.info.pages)
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [type, page]);
+      .catch((err) => {
+        console.error("Ошибка загрузки:", err);
+        setError("Ошибка загрузки данных. Попробуйте позже.");
+        setLoading(false);
+      });
+  }, [page]);
 
   useEffect(() => {
     observer.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading && (!maxPages || page < maxPages)) {
+        if (
+          entries[0].isIntersecting 
+          && !loading 
+          && !error 
+          && (!maxPages || page < maxPages)
+        ) {
           setPage((prev) => prev + 1); 
         }
       },
@@ -60,7 +72,7 @@ const CategoryPage = () => {
         observer.current.disconnect(); 
       }
     };
-  }, [loading]);
+  }, [loading, error, maxPages, page]);
 
   if (!isAuthenticated) {
     return <div>Пожалуйста, войдите в систему для доступа к категориям.</div>;
@@ -69,6 +81,7 @@ const CategoryPage = () => {
   return (
     <div className="category-container">
       <h2>{type.charAt(0).toUpperCase() + type.slice(1)}</h2>
+      {error && <p className="error-message">{error}</p>}
       <ul>
         {items.map((item, index) => (
           <li key={item.id+'-'+page+'-'+index}>

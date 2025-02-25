@@ -20,8 +20,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
-			<Route path="/category/:type" element={<PrivateRoute><CategoryPage /></PrivateRoute>} />
-			<Route path="/category/:type/:id" element={<PrivateRoute><DetailPage /></PrivateRoute>} />
+            <Route path="/category/:type" element={<PrivateRoute><CategoryPage /></PrivateRoute>} />
+            <Route path="/category/:type/:id" element={<PrivateRoute><DetailPage /></PrivateRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
