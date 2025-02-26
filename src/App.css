@@ -30,4 +30,12 @@ img,
   padding: 5px 10px;
 }
 
+.card-loading {
+  font-size: 24px;
+  color: green;
+}
+
+.card-error {
+  color: red;
+}
 

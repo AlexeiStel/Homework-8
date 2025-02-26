@@ -1,35 +1,59 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthProvider";
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom'; 
+import { useAuth } from '../context/AuthProvider';  
+import "./Login.css"
+const Login = () => {
+  const { login } = useAuth();  
+  const [username, setUsername] = useState('');  
+  const [password, setPassword] = useState('');  
+  const [error, setError] = useState('');  
+  const navigate = useNavigate(); 
+  const location = useLocation(); 
 
-export function Login() {
-    const navigate = useNavigate()
-    const auth = useAuth();
-    const location = useLocation();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-    const from = location.state?.from || "/";
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(e.currentTarget);
-        const username = formData.get('username')
-
-        auth.signin(username, () => {
-           
-            navigate(from, {
-                replce: true
-            });
-        })
+    if (!username || !password) {
+      setError('Пожалуйста, заполните все поля.');
+      return;
     }
 
-    return (
-        <>
-            <form onSubmit={handleSubmit}>
-                <label>
-                    UserName: <input type="text" name="username"/>
-                </label>
-                <button type="submit">Login</button>
-            </form>
-        </>
-    ) 
-}
+    setError('');
+    login(username);  
+    const from = location.state?.from || '/'; 
+
+    navigate(from);  
+  };
+
+  return (
+    <div className="login-page">
+      <h1>Вход</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="username">Логин</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Введите логин"
+          />
+        </div>
+        <div>
+          <label htmlFor="password">Пароль</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Введите пароль"
+          />
+        </div>
+        {error && <p style={{ color: 'red' }}>{error}</p>}  
+        <button className="login" type="submit">Войти</button>
+      </form>
+    </div>
+  );
+};
+
+export default Login;
